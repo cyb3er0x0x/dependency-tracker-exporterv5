@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-09
+
+### Added
+- `CHANGELOG.md`.
+- Versioned install instructions in the README: container image with a pinned
+  release tag, pre-built binary download from the releases page, and
+  `go install` from source.
+
 ## [0.1.0] - 2026-09-09
 
 First release of the modernized fork of
@@ -59,5 +67,6 @@ license.
 - CI moved to `actions/setup-go@v5`, `golangci-lint`, `go test -race`, and
   GoReleaser v2.
 
-[Unreleased]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/releases/tag/v0.1.0
