@@ -6,6 +6,22 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-09
+
+### Removed
+- `dependency_track_portfolio_kev` and `dependency_track_project_kev`.
+  Dependency-Track's portfolio/project metrics API exposes no KEV (or EPSS)
+  aggregate, so these metrics never had a data source and were always empty.
+  KEV status is a per-vulnerability property; deriving a portfolio count would
+  require enumerating every finding on each refresh, which defeats the purpose
+  of this exporter.
+
+### Changed
+- Security dependency updates: `golang.org/x/net` 0.55.0, `golang.org/x/crypto`
+  0.52.0, `golang.org/x/oauth2` 0.27.0 (and transitively `x/sys`, `x/text`,
+  `x/sync`). These raise the `go` directive to `1.25`; CI `setup-go` bumped to
+  `1.25.x` to match. Clears the outstanding Dependabot security alerts.
+
 ## [0.2.1] - 2026-09-09
 
 ### Changed
@@ -111,7 +127,8 @@ license.
 - CI moved to `actions/setup-go@v5`, `golangci-lint`, `go test -race`, and
   GoReleaser v2.
 
-[Unreleased]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.1.0...v0.1.1

@@ -26,10 +26,6 @@ type Metrics struct {
 	Low        int `json:"low"`
 	Unassigned int `json:"unassigned"`
 
-	// KEV counts. Present on some Dependency-Track builds; when absent the
-	// exporter derives the value from findings where possible.
-	VulnerabilitiesKev *int `json:"vulnerabilitiesKev,omitempty"`
-
 	VulnerableProjects   int `json:"vulnerableProjects"`
 	VulnerableComponents int `json:"vulnerableComponents"`
 

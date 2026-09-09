@@ -131,7 +131,6 @@ dependency_track_portfolio_components
 dependency_track_portfolio_vulnerable_projects
 dependency_track_portfolio_vulnerable_components
 dependency_track_portfolio_findings_total
-dependency_track_portfolio_kev
 dependency_track_portfolio_policy_violations{state="FAIL|WARN|INFO"}
 dependency_track_portfolio_policy_violations_by_class{class,audited}
 ```
@@ -143,13 +142,9 @@ dependency_track_project_findings{uuid,name,version,audited}
 dependency_track_project_findings_total{uuid,name,version}
 dependency_track_project_suppressed{uuid,name,version}
 dependency_track_project_components{uuid,name,version}
-dependency_track_project_kev{uuid,name,version}
 dependency_track_project_policy_violations_total{uuid,name,version,state="FAIL|WARN|INFO"}
 dependency_track_project_policy_violations_by_class{uuid,name,version,class,audited}
 ```
-
-`*_kev` is only emitted when the running Dependency-Track version reports KEV
-counts in its metrics payload.
 
 ### Exporter self-metrics
 
@@ -197,11 +192,10 @@ rate(dependency_track_exporter_collection_errors_total[15m]) > 0
   * on (uuid) group_left(tags,active) dependency_track_project_info{active="true",tags=~".*,prod,.*"}
 ```
 
-Portfolio critical + KEV exposure:
+Portfolio critical vulnerability exposure:
 
 ```
 dependency_track_portfolio_vulnerabilities{severity="CRITICAL"}
-dependency_track_portfolio_kev
 ```
 
 ## Grafana

@@ -42,9 +42,6 @@ func TestDecode_V1Fixtures(t *testing.T) {
 	if len(projects) != 1 || projects[0].Name != "acme-api" || projects[0].Metrics.Critical != 2 {
 		t.Fatalf("unexpected project: %+v", projects)
 	}
-	if kev := projects[0].Metrics.VulnerabilitiesKev; kev == nil || *kev != 1 {
-		t.Fatalf("expected KEV=1, got %v", kev)
-	}
 	if l, known := projects[0].LatestState(); !known || !l {
 		t.Fatalf("expected latest state true/known, got %v/%v", l, known)
 	}

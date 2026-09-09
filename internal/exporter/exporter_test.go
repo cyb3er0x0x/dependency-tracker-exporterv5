@@ -11,7 +11,6 @@ import (
 )
 
 func boolPtr(b bool) *bool { return &b }
-func intPtr(i int) *int    { return &i }
 
 func testSnapshot() *collector.Snapshot {
 	return &collector.Snapshot{
@@ -22,7 +21,6 @@ func testSnapshot() *collector.Snapshot {
 			FindingsAudited: 6, FindingsUnaudited: 7, FindingsTotal: 13,
 			Suppressed: 8, Projects: 2, Components: 100,
 			PolicyViolationsFail: 9, PolicyViolationsWarn: 10, PolicyViolationsInfo: 11,
-			VulnerabilitiesKev: intPtr(3),
 		},
 		Projects: []dtrack.Project{
 			{

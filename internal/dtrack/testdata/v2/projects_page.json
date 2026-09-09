@@ -9,7 +9,7 @@
       "isLatest": true,
       "tags": [{"name": "prod"}],
       "lastBomImport": 1699999999,
-      "metrics": {"critical": 2, "high": 5, "vulnerabilitiesKev": 1}
+      "metrics": {"critical": 2, "high": 5}
     }
   ],
   "next_page_token": ""

@@ -14,8 +14,7 @@
       "vulnerabilities": 20, "components": 312, "suppressed": 4,
       "findingsTotal": 20, "findingsAudited": 8, "findingsUnaudited": 12,
       "policyViolationsFail": 1, "policyViolationsWarn": 3, "policyViolationsInfo": 0,
-      "policyViolationsSecurityTotal": 2, "policyViolationsLicenseTotal": 2, "policyViolationsOperationalTotal": 0,
-      "vulnerabilitiesKev": 1
+      "policyViolationsSecurityTotal": 2, "policyViolationsLicenseTotal": 2, "policyViolationsOperationalTotal": 0
     }
   }
 ]

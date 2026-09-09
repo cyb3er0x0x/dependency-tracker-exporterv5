@@ -64,7 +64,6 @@ type metrics struct {
 	pComponents     prometheus.Gauge
 	pVulnProjects   prometheus.Gauge
 	pVulnComponents prometheus.Gauge
-	pKev            prometheus.Gauge
 	pPolicyViol     *prometheus.GaugeVec // state
 	pPolicyByClass  *prometheus.GaugeVec // class, audited
 
@@ -80,7 +79,6 @@ type metrics struct {
 	findingsTotal *prometheus.GaugeVec
 	suppressed    *prometheus.GaugeVec
 	components    *prometheus.GaugeVec
-	kev           *prometheus.GaugeVec
 }
 
 func fq(sub, name string) string { return prometheus.BuildFQName(Namespace, sub, name) }
@@ -97,7 +95,6 @@ func newMetrics() *metrics {
 		pComponents:     prometheus.NewGauge(prometheus.GaugeOpts{Name: fq("portfolio", "components"), Help: "Number of components across the whole portfolio."}),
 		pVulnProjects:   prometheus.NewGauge(prometheus.GaugeOpts{Name: fq("portfolio", "vulnerable_projects"), Help: "Number of projects with at least one vulnerability."}),
 		pVulnComponents: prometheus.NewGauge(prometheus.GaugeOpts{Name: fq("portfolio", "vulnerable_components"), Help: "Number of components with at least one vulnerability."}),
-		pKev:            prometheus.NewGauge(prometheus.GaugeOpts{Name: fq("portfolio", "kev"), Help: "Number of Known Exploited Vulnerabilities (CISA KEV) across the whole portfolio."}),
 		pPolicyViol:     prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("portfolio", "policy_violations"), Help: "Number of policy violations across the whole portfolio, by state."}, []string{"state"}),
 		pPolicyByClass:  prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("portfolio", "policy_violations_by_class"), Help: "Number of policy violations across the whole portfolio, by class and audit state."}, []string{"class", "audited"}),
 
@@ -112,17 +109,16 @@ func newMetrics() *metrics {
 		findingsTotal: prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "findings_total"), Help: "Total number of findings for a project."}, projLabels),
 		suppressed:    prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "suppressed"), Help: "Number of suppressed vulnerabilities for a project."}, projLabels),
 		components:    prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "components"), Help: "Number of components for a project."}, projLabels),
-		kev:           prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "kev"), Help: "Number of Known Exploited Vulnerabilities (CISA KEV) for a project."}, projLabels),
 	}
 }
 
 func (m *metrics) collectAll(ch chan<- prometheus.Metric) {
 	for _, c := range []prometheus.Collector{
 		m.pInheritedRisk, m.pVulns, m.pFindings, m.pFindingsTotal, m.pSuppressed,
-		m.pProjects, m.pComponents, m.pVulnProjects, m.pVulnComponents, m.pKev,
+		m.pProjects, m.pComponents, m.pVulnProjects, m.pVulnComponents,
 		m.pPolicyViol, m.pPolicyByClass,
 		m.info, m.vulns, m.policyViol, m.policyViolTot, m.policyByClass, m.lastBOMImport,
-		m.inheritedRisk, m.findings, m.findingsTotal, m.suppressed, m.components, m.kev,
+		m.inheritedRisk, m.findings, m.findingsTotal, m.suppressed, m.components,
 	} {
 		c.Collect(ch)
 	}
@@ -142,9 +138,6 @@ func (m *metrics) renderPortfolio(p dtrack.Metrics) {
 	m.pComponents.Set(float64(p.Components))
 	m.pVulnProjects.Set(float64(p.VulnerableProjects))
 	m.pVulnComponents.Set(float64(p.VulnerableComponents))
-	if p.VulnerabilitiesKev != nil {
-		m.pKev.Set(float64(*p.VulnerabilitiesKev))
-	}
 	m.pPolicyViol.WithLabelValues("FAIL").Set(float64(p.PolicyViolationsFail))
 	m.pPolicyViol.WithLabelValues("WARN").Set(float64(p.PolicyViolationsWarn))
 	m.pPolicyViol.WithLabelValues("INFO").Set(float64(p.PolicyViolationsInfo))
@@ -196,9 +189,6 @@ func (m *metrics) renderProject(p *dtrack.Project) {
 	m.findingsTotal.WithLabelValues(uuid, name, ver).Set(float64(pm.FindingsTotal))
 	m.suppressed.WithLabelValues(uuid, name, ver).Set(float64(pm.Suppressed))
 	m.components.WithLabelValues(uuid, name, ver).Set(float64(pm.Components))
-	if pm.VulnerabilitiesKev != nil {
-		m.kev.WithLabelValues(uuid, name, ver).Set(float64(*pm.VulnerabilitiesKev))
-	}
 
 	m.policyViolTot.WithLabelValues(uuid, name, ver, "FAIL").Set(float64(pm.PolicyViolationsFail))
 	m.policyViolTot.WithLabelValues(uuid, name, ver, "WARN").Set(float64(pm.PolicyViolationsWarn))
