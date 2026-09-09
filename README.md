@@ -30,13 +30,44 @@ query timeout, so `/api/v1/violation` pagination increasingly fails outright.
 Decoupling collection from scraping fixes both: Prometheus always gets a fast
 answer, and Dependency-Track is queried at a predictable, low rate.
 
-## Running
+## Install
+
+### Container image
 
 ```
 docker run --rm -p 9916:9916 \
   -e DEPENDENCY_TRACK_ADDR=https://dtrack.example.com \
   -e DEPENDENCY_TRACK_API_KEY=odt_xxx \
-  ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:latest
+  ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:v0.1.0
+```
+
+Pin a released tag (`:v0.1.0`) in production; `:latest` tracks the newest release.
+Images are multi-arch (`linux/amd64`, `linux/arm64`).
+
+### Pre-built binary
+
+Download from the [releases page](https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/releases):
+
+```
+VERSION=0.1.0
+curl -sSL -o dte.tar.gz \
+  https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/releases/download/v${VERSION}/dependency-tracker-exporterv5_${VERSION}_linux_amd64.tar.gz
+tar -xzf dte.tar.gz dependency-track-exporter
+./dependency-track-exporter --help
+```
+
+### From source
+
+```
+go install github.com/cyb3er0x0x/dependency-tracker-exporterv5/cmd/dependency-track-exporter@v0.1.0
+```
+
+## Running
+
+```
+dependency-track-exporter \
+  --dtrack.address=https://dtrack.example.com \
+  --dtrack.api-key=odt_xxx
 ```
 
 The API key needs the permissions `VIEW_PORTFOLIO`, `VIEW_POLICY_VIOLATION` and
@@ -188,3 +219,7 @@ go build ./cmd/dependency-track-exporter
 
 Mock Dependency-Track responses for both API versions live in
 `internal/dtrack/testdata/{v1,v2}`.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
