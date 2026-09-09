@@ -30,7 +30,6 @@ type Config struct {
 	RetryMax          int
 	RetryBaseDelay    time.Duration
 	PageSize          int
-	MaxConcurrency    int
 	TLSInsecure       bool
 
 	MetricsPath string
@@ -48,8 +47,7 @@ func Bind(app *kingpin.Application) func() (*Config, error) {
 		reqTO      = app.Flag("dtrack.timeout", fmt.Sprintf("Per-request timeout for Dependency-Track API calls (env $%s).", envTimeout)).Default("30s").Envar(envTimeout).Duration()
 		retryMax   = app.Flag("dtrack.retry-max", "Maximum retries for failed Dependency-Track requests.").Default("3").Int()
 		retryBase  = app.Flag("dtrack.retry-base-delay", "Base delay for exponential backoff between retries.").Default("500ms").Duration()
-		pageSize   = app.Flag("dtrack.page-size", "API page size for paginated requests (clamped to [1,500]).").Default("100").Int()
-		maxConc    = app.Flag("dtrack.max-concurrency", "Maximum concurrent per-project API calls.").Default("4").Int()
+		pageSize   = app.Flag("dtrack.page-size", "API page size for paginated requests (clamped to [1,100]).").Default("100").Int()
 		tlsInsec   = app.Flag("dtrack.tls-insecure-skip-verify", "Disable TLS certificate verification for Dependency-Track.").Default("false").Bool()
 		metricsP   = app.Flag("web.metrics-path", "Path under which to expose metrics.").Default("/metrics").String()
 	)
@@ -65,7 +63,6 @@ func Bind(app *kingpin.Application) func() (*Config, error) {
 			RetryMax:          *retryMax,
 			RetryBaseDelay:    *retryBase,
 			PageSize:          *pageSize,
-			MaxConcurrency:    *maxConc,
 			TLSInsecure:       *tlsInsec,
 			MetricsPath:       *metricsP,
 		}

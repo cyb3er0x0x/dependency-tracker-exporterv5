@@ -33,6 +33,32 @@ func (f *fakeAPI) PolicyViolations(context.Context) ([]dtrack.PolicyViolation, e
 }
 func (f *fakeAPI) ServerVersion() string { return "5.1.0" }
 
+type panicAPI struct{}
+
+func (panicAPI) PortfolioMetrics(context.Context) (dtrack.Metrics, error) {
+	return dtrack.Metrics{}, nil
+}
+func (panicAPI) Projects(context.Context) ([]dtrack.Project, error) { panic("boom in Projects") }
+func (panicAPI) PolicyViolations(context.Context) ([]dtrack.PolicyViolation, error) {
+	return nil, nil
+}
+func (panicAPI) ServerVersion() string { return "" }
+
+func TestCollector_RecoversFromPanic(t *testing.T) {
+	store := NewStore()
+	c := New(Options{Client: panicAPI{}, Store: store})
+	err := c.CollectNow(context.Background())
+	if err == nil {
+		t.Fatal("expected an error from the recovered panic")
+	}
+	if testutil.ToFloat64(c.errorsTotal) != 1 {
+		t.Fatalf("collection_errors_total = %v, want 1", testutil.ToFloat64(c.errorsTotal))
+	}
+	if store.Get() != nil {
+		t.Fatal("panicking collection must not publish a snapshot")
+	}
+}
+
 func TestCollector_HappyPathAndFailureKeepsSnapshot(t *testing.T) {
 	now := time.Unix(1_000_000, 0)
 	api := &fakeAPI{

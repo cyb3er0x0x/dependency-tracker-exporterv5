@@ -12,7 +12,7 @@ The key differences:
 | DT API calls | on **every** `/metrics` scrape | in a **background loop** (default every 5m) |
 | `/metrics` latency | grows with portfolio size | constant — serves an in-memory snapshot |
 | Failed DT query | scrape returns HTTP 500 | previous snapshot is kept, scrape still 200 |
-| API page size | hard-coded 50 | configurable, default 100 (`[1,500]`) |
+| API page size | hard-coded 50 | configurable, default 100 (`[1,100]`) |
 | REST API | v1 only | v1, plus **v2 + `next_page_token`** where available (`--dtrack.api-version`) |
 | Retries / timeouts | none / library default | configurable (`--dtrack.retry-max`, `--dtrack.timeout`) |
 | Self-observability | none | collection duration, errors, last-success, cache age |
@@ -88,8 +88,7 @@ The image runs as UID `65532` with a read-only root filesystem.
 --dtrack.collection-timeout   whole-collection deadline    (default 4m)
 --dtrack.retry-max            retries on 5xx / timeout     (default 3)
 --dtrack.retry-base-delay     backoff base delay           (default 500ms)
---dtrack.page-size            API page size, clamped [1,500] (default 100)
---dtrack.max-concurrency      max concurrent per-project calls (default 4)
+--dtrack.page-size            API page size, clamped [1,100] (default 100)
 --dtrack.tls-insecure-skip-verify   disable TLS verification (default false)
 --web.listen-address          (default :9916)
 --web.metrics-path            (default /metrics)
@@ -145,7 +144,8 @@ dependency_track_project_findings_total{uuid,name,version}
 dependency_track_project_suppressed{uuid,name,version}
 dependency_track_project_components{uuid,name,version}
 dependency_track_project_kev{uuid,name,version}
-dependency_track_project_policy_violations_total{uuid,name,version,type,state}
+dependency_track_project_policy_violations_total{uuid,name,version,state="FAIL|WARN|INFO"}
+dependency_track_project_policy_violations_by_class{uuid,name,version,class,audited}
 ```
 
 `*_kev` is only emitted when the running Dependency-Track version reports KEV

@@ -52,8 +52,13 @@ type Options struct {
 
 const (
 	defaultPageSize = 100
-	maxPageSize     = 500
-	minPageSize     = 1
+	// maxPageSize is deliberately conservative. Dependency-Track's v1 API does
+	// not report when it caps an oversized pageSize server-side, which would
+	// silently truncate paginated results; and Dependency-Track 5.x enforces a
+	// database query timeout that large pages are prone to hit. 100 is the
+	// value DT itself uses by default and is safe for both API versions.
+	maxPageSize = 100
+	minPageSize = 1
 )
 
 // Client is a thin Dependency-Track API client.
@@ -150,7 +155,11 @@ func (c *Client) do(ctx context.Context, path string, query url.Values, out any)
 	var lastErr error
 	for attempt := 0; attempt <= c.retryMax; attempt++ {
 		if attempt > 0 {
-			delay := c.retryBase << (attempt - 1)
+			shift := attempt - 1
+			if shift > 6 {
+				shift = 6 // cap the exponential backoff at 64x the base delay
+			}
+			delay := c.retryBase << shift
 			timer := time.NewTimer(delay)
 			select {
 			case <-ctx.Done():

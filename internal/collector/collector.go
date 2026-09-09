@@ -2,6 +2,7 @@ package collector
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -135,9 +136,18 @@ func (c *Collector) Run(ctx context.Context) {
 // optionally an admin endpoint).
 func (c *Collector) CollectNow(ctx context.Context) error { return c.collectOnce(ctx) }
 
-func (c *Collector) collectOnce(parent context.Context) error {
+func (c *Collector) collectOnce(parent context.Context) (err error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	// A panic while decoding or rendering untrusted Dependency-Track responses
+	// must not kill the background refresh goroutine.
+	defer func() {
+		if r := recover(); r != nil {
+			c.errorsTotal.Inc()
+			err = fmt.Errorf("panic during collection: %v", r)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(parent, c.opts.CollectionTimeout)
 	defer cancel()

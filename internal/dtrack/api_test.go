@@ -64,6 +64,37 @@ func TestProjects_OffsetPagination(t *testing.T) {
 	}
 }
 
+// TestProjects_ServerCapsPageSize guards against silent truncation: the server
+// ignores our requested pageSize and returns smaller pages, but X-Total-Count is
+// the authority on when to stop.
+func TestProjects_ServerCapsPageSize(t *testing.T) {
+	const total, serverCap = 250, 50
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v1/project", func(w http.ResponseWriter, r *http.Request) {
+		page, _ := strconv.Atoi(r.URL.Query().Get("pageNumber"))
+		w.Header().Set("X-Total-Count", strconv.Itoa(total))
+		var out []Project
+		for i := 0; i < serverCap; i++ {
+			idx := (page-1)*serverCap + i
+			if idx >= total {
+				break
+			}
+			out = append(out, Project{UUID: fmt.Sprintf("u-%d", idx)})
+		}
+		_ = json.NewEncoder(w).Encode(out)
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	got, err := newTestClient(t, srv.URL).Projects(context.Background()) // asks pageSize=100
+	if err != nil {
+		t.Fatalf("Projects: %v", err)
+	}
+	if len(got) != total {
+		t.Fatalf("got %d projects, want %d (server cap must not truncate)", len(got), total)
+	}
+}
+
 func TestProjects_TokenPagination_V2(t *testing.T) {
 	pages := [][]Project{
 		{{UUID: "a"}, {UUID: "b"}},
@@ -178,7 +209,7 @@ func TestSecret_NeverLeaks(t *testing.T) {
 }
 
 func TestNew_ClampsPageSize(t *testing.T) {
-	for _, tc := range []struct{ in, want int }{{0, 100}, {-5, 1}, {9000, 500}, {250, 250}} {
+	for _, tc := range []struct{ in, want int }{{0, 100}, {-5, 1}, {9000, 100}, {250, 100}, {75, 75}} {
 		c, err := New(Options{BaseURL: "http://x", APIKey: "k", PageSize: tc.in})
 		if err != nil {
 			t.Fatal(err)

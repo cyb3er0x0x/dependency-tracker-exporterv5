@@ -2,6 +2,7 @@ package dtrack
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"strconv"
 )
@@ -34,6 +35,18 @@ func (c *Client) Probe(ctx context.Context) {
 	}
 }
 
+// maxPages bounds every paginated walk so a misbehaving server (a stuck
+// next_page_token, a pageNumber that is ignored) can never loop forever.
+const maxPages = 100_000
+
+func cloneValues(base url.Values) url.Values {
+	q := make(url.Values, len(base))
+	for k, vs := range base {
+		q[k] = append([]string(nil), vs...)
+	}
+	return q
+}
+
 // tokenPage is the envelope returned by v2 token-paginated collections.
 type tokenPage[T any] struct {
 	Items         []T    `json:"items"`
@@ -44,41 +57,34 @@ type tokenPage[T any] struct {
 func paginateToken[T any](ctx context.Context, c *Client, path string, base url.Values) ([]T, error) {
 	var out []T
 	token := ""
-	for {
-		q := url.Values{}
-		for k, vs := range base {
-			for _, v := range vs {
-				q.Add(k, v)
-			}
-		}
+	for page := 0; page < maxPages; page++ {
+		q := cloneValues(base)
 		q.Set("limit", strconv.Itoa(c.pageSize))
 		if token != "" {
 			q.Set("pageToken", token)
 		}
-		var page tokenPage[T]
-		if _, err := c.do(ctx, path, q, &page); err != nil {
+		var body tokenPage[T]
+		if _, err := c.do(ctx, path, q, &body); err != nil {
 			return nil, err
 		}
-		out = append(out, page.Items...)
-		if page.NextPageToken == "" || len(page.Items) == 0 {
+		out = append(out, body.Items...)
+		// Stop on an empty page, a missing token, or a token that did not
+		// advance (server bug) - any of which means there is nothing more.
+		if len(body.Items) == 0 || body.NextPageToken == "" || body.NextPageToken == token {
 			return out, nil
 		}
-		token = page.NextPageToken
+		token = body.NextPageToken
 	}
+	return out, fmt.Errorf("dtrack: GET %s: pagination exceeded %d pages", path, maxPages)
 }
 
-// paginateOffset walks a v1 pageNumber/pageSize collection to completion using
-// the X-Total-Count header as the terminating condition.
+// paginateOffset walks a v1 pageNumber/pageSize collection to completion. The
+// X-Total-Count header is the authority on when to stop; a short page is only
+// treated as the end when the server does not send that header.
 func paginateOffset[T any](ctx context.Context, c *Client, path string, base url.Values) ([]T, error) {
 	var out []T
-	pageNumber := 1
-	for {
-		q := url.Values{}
-		for k, vs := range base {
-			for _, v := range vs {
-				q.Add(k, v)
-			}
-		}
+	for pageNumber := 1; pageNumber <= maxPages; pageNumber++ {
+		q := cloneValues(base)
 		q.Set("pageNumber", strconv.Itoa(pageNumber))
 		q.Set("pageSize", strconv.Itoa(c.pageSize))
 
@@ -88,12 +94,21 @@ func paginateOffset[T any](ctx context.Context, c *Client, path string, base url
 			return nil, err
 		}
 		out = append(out, items...)
+
 		total := totalCount(hdr)
-		if len(items) == 0 || (total > 0 && len(out) >= total) || len(items) < c.pageSize {
+		switch {
+		case len(items) == 0:
+			return out, nil
+		case total > 0:
+			if len(out) >= total {
+				return out, nil
+			}
+		case len(items) < c.pageSize:
+			// No X-Total-Count and a short page: assume this was the last one.
 			return out, nil
 		}
-		pageNumber++
 	}
+	return out, fmt.Errorf("dtrack: GET %s: pagination exceeded %d pages", path, maxPages)
 }
 
 // PortfolioMetrics returns the latest portfolio-wide metrics. Only the v1

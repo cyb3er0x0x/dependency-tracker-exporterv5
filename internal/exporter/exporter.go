@@ -72,7 +72,8 @@ type metrics struct {
 	info          *prometheus.GaugeVec
 	vulns         *prometheus.GaugeVec // uuid,name,version,severity
 	policyViol    *prometheus.GaugeVec // uuid,name,version,type,state,analysis,suppressed
-	policyViolTot *prometheus.GaugeVec // uuid,name,version,type,state
+	policyViolTot *prometheus.GaugeVec // uuid,name,version,state
+	policyByClass *prometheus.GaugeVec // uuid,name,version,class,audited
 	lastBOMImport *prometheus.GaugeVec
 	inheritedRisk *prometheus.GaugeVec
 	findings      *prometheus.GaugeVec // uuid,name,version,audited
@@ -103,7 +104,8 @@ func newMetrics() *metrics {
 		info:          prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "info"), Help: "Project information."}, []string{"uuid", "name", "version", "classifier", "active", "latest", "tags"}),
 		vulns:         prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "vulnerabilities"), Help: "Number of vulnerabilities for a project by severity."}, []string{"uuid", "name", "version", "severity"}),
 		policyViol:    prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "policy_violations"), Help: "Policy violations for a project."}, []string{"uuid", "name", "version", "type", "state", "analysis", "suppressed"}),
-		policyViolTot: prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "policy_violations_total"), Help: "Policy violation counts for a project as reported by project metrics."}, []string{"uuid", "name", "version", "type", "state"}),
+		policyViolTot: prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "policy_violations_total"), Help: "Policy violation counts for a project by state, as reported by project metrics."}, []string{"uuid", "name", "version", "state"}),
+		policyByClass: prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "policy_violations_by_class"), Help: "Policy violation counts for a project by class and audit state, as reported by project metrics."}, []string{"uuid", "name", "version", "class", "audited"}),
 		lastBOMImport: prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "last_bom_import"), Help: "Last BOM import date, represented as a Unix timestamp."}, projLabels),
 		inheritedRisk: prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "inherited_risk_score"), Help: "Inherited risk score for a project."}, projLabels),
 		findings:      prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: fq("project", "findings"), Help: "Number of findings for a project, audited and unaudited."}, []string{"uuid", "name", "version", "audited"}),
@@ -119,7 +121,7 @@ func (m *metrics) collectAll(ch chan<- prometheus.Metric) {
 		m.pInheritedRisk, m.pVulns, m.pFindings, m.pFindingsTotal, m.pSuppressed,
 		m.pProjects, m.pComponents, m.pVulnProjects, m.pVulnComponents, m.pKev,
 		m.pPolicyViol, m.pPolicyByClass,
-		m.info, m.vulns, m.policyViol, m.policyViolTot, m.lastBOMImport,
+		m.info, m.vulns, m.policyViol, m.policyViolTot, m.policyByClass, m.lastBOMImport,
 		m.inheritedRisk, m.findings, m.findingsTotal, m.suppressed, m.components, m.kev,
 	} {
 		c.Collect(ch)
@@ -198,13 +200,15 @@ func (m *metrics) renderProject(p *dtrack.Project) {
 		m.kev.WithLabelValues(uuid, name, ver).Set(float64(*pm.VulnerabilitiesKev))
 	}
 
-	m.policyViolTot.WithLabelValues(uuid, name, ver, "SECURITY", "FAIL").Set(0)
-	m.policyViolTot.WithLabelValues(uuid, name, ver, "ANY", "FAIL").Set(float64(pm.PolicyViolationsFail))
-	m.policyViolTot.WithLabelValues(uuid, name, ver, "ANY", "WARN").Set(float64(pm.PolicyViolationsWarn))
-	m.policyViolTot.WithLabelValues(uuid, name, ver, "ANY", "INFO").Set(float64(pm.PolicyViolationsInfo))
-	m.policyViolTot.WithLabelValues(uuid, name, ver, "SECURITY", "ANY").Set(float64(pm.PolicyViolationsSecurityTotal))
-	m.policyViolTot.WithLabelValues(uuid, name, ver, "LICENSE", "ANY").Set(float64(pm.PolicyViolationsLicenseTotal))
-	m.policyViolTot.WithLabelValues(uuid, name, ver, "OPERATIONAL", "ANY").Set(float64(pm.PolicyViolationsOperationalTotal))
+	m.policyViolTot.WithLabelValues(uuid, name, ver, "FAIL").Set(float64(pm.PolicyViolationsFail))
+	m.policyViolTot.WithLabelValues(uuid, name, ver, "WARN").Set(float64(pm.PolicyViolationsWarn))
+	m.policyViolTot.WithLabelValues(uuid, name, ver, "INFO").Set(float64(pm.PolicyViolationsInfo))
+	m.policyByClass.WithLabelValues(uuid, name, ver, "SECURITY", "true").Set(float64(pm.PolicyViolationsSecurityAudited))
+	m.policyByClass.WithLabelValues(uuid, name, ver, "SECURITY", "false").Set(float64(pm.PolicyViolationsSecurityUnaudited))
+	m.policyByClass.WithLabelValues(uuid, name, ver, "LICENSE", "true").Set(float64(pm.PolicyViolationsLicenseAudited))
+	m.policyByClass.WithLabelValues(uuid, name, ver, "LICENSE", "false").Set(float64(pm.PolicyViolationsLicenseUnaudited))
+	m.policyByClass.WithLabelValues(uuid, name, ver, "OPERATIONAL", "true").Set(float64(pm.PolicyViolationsOperationalAudited))
+	m.policyByClass.WithLabelValues(uuid, name, ver, "OPERATIONAL", "false").Set(float64(pm.PolicyViolationsOperationalUnaudited))
 
 	// Pre-initialise every possible detailed violation series to 0 so that
 	// counter-style increments record a 0 -> 1 transition. Mirrors upstream.

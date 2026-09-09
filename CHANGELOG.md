@@ -7,15 +7,38 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Changed
-- `go` directive bumped to `1.24`; CI `setup-go` to `1.24.x`.
+- `go` directive bumped to `1.24`; CI `setup-go` to `1.24.x`; Docker build
+  image to `golang:1.27-bookworm`.
 - `golangci-lint` upgraded to v2 (`golangci-lint-action@v9`, pinned
   `v2.13.2`); `.golangci.yml` migrated to the v2 schema.
+- Dependency updates: `actions/upload-artifact` v7, `docker/setup-qemu-action`
+  v4, `docker/setup-buildx-action` v4, `goreleaser/goreleaser-action` v7.
+- Maximum `--dtrack.page-size` lowered from 500 to **100**. Dependency-Track
+  does not signal when it caps an oversized page server-side (which would
+  silently truncate results), and DT 5.x's database query timeout makes large
+  pages fragile. 100 is DT's own default.
+- `dependency_track_project_policy_violations_total` labels reduced to
+  `{state}`; per-class counts moved to a new
+  `dependency_track_project_policy_violations_by_class{class,audited}` metric,
+  mirroring the portfolio metrics. (These metrics are new in this line; no
+  released version exposed the old shape.)
 
 ### Added
 - `.golangci.yml` with an `errcheck` exclusion for `go-kit/log`'s
   `Logger.Log`.
 
 ### Fixed
+- **v1 pagination could silently truncate** when Dependency-Track returned
+  fewer rows than the requested page size: the walk now treats `X-Total-Count`
+  as authoritative and only stops on a short page when that header is absent.
+- Token and offset pagination are now bounded, so a misbehaving server cannot
+  cause an unbounded loop.
+- A panic while decoding or rendering a Dependency-Track response no longer
+  kills the background refresh goroutine; it is counted as a collection error
+  and the previous snapshot is retained.
+- Exponential-backoff retry delay is capped (was unbounded for large
+  `--dtrack.retry-max`).
+- Removed the unimplemented `--dtrack.max-concurrency` flag.
 - CI `golangci-lint` step failures (`errcheck` on unchecked `Logger.Log`
   and `resp.Body.Close`; `revive` unused parameter).
 
@@ -45,9 +68,9 @@ license.
   capability probe (`--dtrack.api-version=v1|v2|auto`, default `auto`), falling
   back to v1 per resource.
 - **Configurable request behaviour** — `--dtrack.page-size` (default `100`,
-  clamped `[1,500]`, was a hard-coded `50`), `--dtrack.timeout`,
+  clamped `[1,100]`, was a hard-coded `50`), `--dtrack.timeout`,
   `--dtrack.collection-timeout`, `--dtrack.retry-max`,
-  `--dtrack.retry-base-delay`, `--dtrack.max-concurrency`,
+  `--dtrack.retry-base-delay`,
   `--dtrack.tls-insecure-skip-verify`.
 - **Exporter self-metrics**: `dependency_track_exporter_collection_duration_seconds`,
   `_collection_errors_total`, `_last_success_timestamp_seconds`,
