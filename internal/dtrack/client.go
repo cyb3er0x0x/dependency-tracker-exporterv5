@@ -18,11 +18,11 @@ import (
 // real value is only reachable via Reveal.
 type Secret string
 
-func (s Secret) String() string                { return "***" }
-func (s Secret) GoString() string              { return `"***"` }
-func (s Secret) Format(f fmt.State, verb rune) { _, _ = io.WriteString(f, "***") }
-func (s Secret) MarshalText() ([]byte, error)  { return []byte("***"), nil }
-func (s Secret) MarshalJSON() ([]byte, error)  { return []byte(`"***"`), nil }
+func (s Secret) String() string               { return "***" }
+func (s Secret) GoString() string             { return `"***"` }
+func (s Secret) Format(f fmt.State, _ rune)   { _, _ = io.WriteString(f, "***") }
+func (s Secret) MarshalText() ([]byte, error) { return []byte("***"), nil }
+func (s Secret) MarshalJSON() ([]byte, error) { return []byte(`"***"`), nil }
 
 // Reveal returns the underlying secret value. Only call this at the point the
 // value is handed to the transport.

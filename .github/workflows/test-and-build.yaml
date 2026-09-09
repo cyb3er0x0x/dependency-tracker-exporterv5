@@ -24,7 +24,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.64.8
       - run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
       - uses: actions/upload-artifact@v4
         with:

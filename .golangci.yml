@@ -1,0 +1,26 @@
+# golangci-lint v1 configuration.
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - revive
+
+linters-settings:
+  errcheck:
+    # go-kit/log's Logger.Log returns an error that, per the library's own
+    # design, callers are not expected to handle.
+    exclude-functions:
+      - (github.com/go-kit/log.Logger).Log
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck

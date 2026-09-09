@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `.golangci.yml` (v1 config) with an `errcheck` exclusion for
+  `go-kit/log`'s `Logger.Log`.
+
+### Fixed
+- CI `golangci-lint` step failed (`errcheck` on unchecked `Logger.Log`
+  return values, `revive` unused parameter). Linter pinned to `v1.64.8`.
+
 ## [0.1.1] - 2026-09-09
 
 ### Added
