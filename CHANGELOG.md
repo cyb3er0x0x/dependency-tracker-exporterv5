@@ -6,6 +6,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-09
+
+### Changed
+- CI action bumps: `actions/checkout` v7, `actions/setup-go` v7,
+  `docker/build-push-action` v7, `docker/login-action` v4.
+
 ## [0.2.0] - 2026-09-09
 
 ### Changed
@@ -105,7 +111,8 @@ license.
 - CI moved to `actions/setup-go@v5`, `golangci-lint`, `go test -race`, and
   GoReleaser v2.
 
-[Unreleased]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/cyb3er0x0x/dependency-tracker-exporterv5/releases/tag/v0.1.0
