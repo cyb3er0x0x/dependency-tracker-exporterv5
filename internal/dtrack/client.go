@@ -176,11 +176,11 @@ func (c *Client) do(ctx context.Context, path string, query url.Values, out any)
 
 		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
 			body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			lastErr = fmt.Errorf("dtrack: GET %s: status %d: %s", path, resp.StatusCode, strings.TrimSpace(string(body)))
 			continue
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode >= 400 {
 			body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))

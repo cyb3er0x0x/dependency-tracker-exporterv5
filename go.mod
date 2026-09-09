@@ -1,6 +1,6 @@
 module github.com/cyb3er0x0x/dependency-tracker-exporterv5
 
-go 1.23
+go 1.24
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
