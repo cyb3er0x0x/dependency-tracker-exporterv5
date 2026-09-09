@@ -1,0 +1,61 @@
+version: 2
+
+builds:
+  - main: ./cmd/dependency-track-exporter
+    binary: dependency-track-exporter
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    goos: [linux, darwin, windows]
+    goarch: ["386", amd64, arm, arm64]
+    ldflags: >-
+      -s -w
+      -X github.com/prometheus/common/version.Version={{.Version}}
+      -X github.com/prometheus/common/version.Revision={{.FullCommit}}
+      -X github.com/prometheus/common/version.Branch={{.Branch}}
+      -X github.com/prometheus/common/version.BuildDate={{.Date}}
+
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+release:
+  github:
+    owner: cyb3er0x0x
+    name: dependency-tracker-exporterv5
+
+dockers:
+  - image_templates:
+      - "ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:{{.Version}}-amd64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.source=https://github.com/cyb3er0x0x/dependency-tracker-exporterv5"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - image_templates:
+      - "ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:{{.Version}}-arm64"
+    dockerfile: Dockerfile.goreleaser
+    use: buildx
+    goarch: arm64
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.source=https://github.com/cyb3er0x0x/dependency-tracker-exporterv5"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+
+docker_manifests:
+  - name_template: "ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:{{.Version}}"
+    image_templates:
+      - "ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:{{.Version}}-amd64"
+      - "ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:{{.Version}}-arm64"
+  - name_template: "ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:latest"
+    image_templates:
+      - "ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:{{.Version}}-amd64"
+      - "ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:{{.Version}}-arm64"

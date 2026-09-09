@@ -1,0 +1,21 @@
+[
+  {
+    "uuid": "11111111-1111-1111-1111-111111111111",
+    "name": "acme-api",
+    "version": "2.3.1",
+    "classifier": "APPLICATION",
+    "active": true,
+    "isLatest": true,
+    "tags": [{"name": "prod"}, {"name": "team-payments"}],
+    "lastBomImport": 1699999999,
+    "metrics": {
+      "inheritedRiskScore": 145.0,
+      "critical": 2, "high": 5, "medium": 9, "low": 3, "unassigned": 1,
+      "vulnerabilities": 20, "components": 312, "suppressed": 4,
+      "findingsTotal": 20, "findingsAudited": 8, "findingsUnaudited": 12,
+      "policyViolationsFail": 1, "policyViolationsWarn": 3, "policyViolationsInfo": 0,
+      "policyViolationsSecurityTotal": 2, "policyViolationsLicenseTotal": 2, "policyViolationsOperationalTotal": 0,
+      "vulnerabilitiesKev": 1
+    }
+  }
+]

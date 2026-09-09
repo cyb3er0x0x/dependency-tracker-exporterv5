@@ -1,0 +1,9 @@
+FROM gcr.io/distroless/static:nonroot
+
+USER 65532:65532
+
+COPY dependency-track-exporter /dependency-track-exporter
+
+EXPOSE 9916
+
+ENTRYPOINT ["/dependency-track-exporter"]

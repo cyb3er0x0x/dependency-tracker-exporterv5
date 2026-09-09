@@ -1,0 +1,9 @@
+[
+  {
+    "uuid": "99999999-9999-9999-9999-999999999999",
+    "type": "LICENSE",
+    "project": {"uuid": "11111111-1111-1111-1111-111111111111", "name": "acme-api", "version": "2.3.1"},
+    "policyCondition": {"policy": {"name": "Copyleft", "violationState": "WARN"}},
+    "analysis": {"analysisState": "APPROVED", "isSuppressed": false}
+  }
+]

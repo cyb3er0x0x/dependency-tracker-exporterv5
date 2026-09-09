@@ -1,0 +1,35 @@
+# Podman Quadlet unit — install to ~/.config/containers/systemd/ for a rootless
+# user service, or /etc/containers/systemd/ for a system service.
+#
+#   systemctl --user daemon-reload
+#   systemctl --user start dependency-track-exporter
+#
+# Put DEPENDENCY_TRACK_API_KEY in ~/.config/dependency-track-exporter.env
+# (mode 0600) so it never appears in the unit file or `podman inspect` args.
+
+[Unit]
+Description=Prometheus exporter for OWASP Dependency-Track
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/cyb3er0x0x/dependency-tracker-exporterv5:latest
+AutoUpdate=registry
+PublishPort=9916:9916
+EnvironmentFile=%h/.config/dependency-track-exporter.env
+Environment=DEPENDENCY_TRACK_ADDR=http://dependency-track-apiserver:8080
+Environment=DEPENDENCY_TRACK_REFRESH_INTERVAL=5m
+# Rootless hardening — the image already runs as UID 65532 and needs no writable FS.
+User=65532
+ReadOnly=true
+NoNewPrivileges=true
+DropCapability=ALL
+HealthCmd=/dependency-track-exporter --version
+HealthStartPeriod=10s
+
+[Service]
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

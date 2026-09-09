@@ -1,0 +1,66 @@
+{
+  "__inputs": [
+    { "name": "DS_PROMETHEUS", "label": "Prometheus", "type": "datasource", "pluginId": "prometheus" }
+  ],
+  "title": "Dependency-Track",
+  "uid": "dependency-track",
+  "schemaVersion": 39,
+  "editable": true,
+  "time": { "from": "now-24h", "to": "now" },
+  "refresh": "1m",
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Snapshot age",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "steps": [
+        { "color": "green", "value": null }, { "color": "yellow", "value": 600 }, { "color": "red", "value": 1800 }
+      ] } } },
+      "targets": [ { "expr": "dependency_track_exporter_cache_age_seconds" } ]
+    },
+    {
+      "type": "stat",
+      "title": "Collection errors (15m)",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [ { "expr": "increase(dependency_track_exporter_collection_errors_total[15m])" } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Portfolio vulnerabilities by severity",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [ { "expr": "dependency_track_portfolio_vulnerabilities", "legendFormat": "{{severity}}" } ]
+    },
+    {
+      "type": "stat",
+      "title": "Known Exploited Vulnerabilities (KEV)",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [ { "expr": "dependency_track_portfolio_kev" } ]
+    },
+    {
+      "type": "table",
+      "title": "Top 20 projects by inherited risk score",
+      "gridPos": { "h": 12, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [ { "expr": "topk(20, dependency_track_project_inherited_risk_score)", "format": "table", "instant": true } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Portfolio policy violations by state",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [ { "expr": "dependency_track_portfolio_policy_violations", "legendFormat": "{{state}}" } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Unaudited findings (portfolio)",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 22 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [ { "expr": "dependency_track_portfolio_findings{audited=\"false\"}", "legendFormat": "unaudited" } ]
+    }
+  ]
+}
